@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Main Page</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<section id="mainView" class="view">
+  <div class="topbar">
+    <h2>Main Page</h2>
+    <p>Welcome, {{ user_name }}</p>
+    <a href="/logout">Logout</a>
+  </div>
+
+  <div class="main-grid">
+
+    <div class="area">
+      <h3>User Area</h3>
+      <p class="small">Logged in user:</p>
+      <p id="userNameText">{{ user_name }}</p>
+    </div>
+
+    <div class="area">
+      <h3>Subscription Area</h3>
+      <ul class="list"></ul>
+      <p class="small">No subscriptions yet.</p>
+    </div>
+
+    <div class="area">
+      <h3>Query Area</h3>
+
+      <form method="POST">
+        <div class="query-fields">
+          <div>
+            <label>Title</label>
+            <input type="text" name="title" placeholder="Song title">
+          </div>
+
+          <div>
+            <label>Year</label>
+            <input type="number" name="year" placeholder="Year">
+          </div>
+
+          <div>
+            <label>Artist</label>
+            <input type="text" name="artist" placeholder="Artist">
+          </div>
+
+          <div>
+            <label>Album</label>
+            <input type="text" name="album" placeholder="Album">
+          </div>
+        </div>
+
+        <button type="submit">Query</button>
+      </form>
+    </div>
+
+  </div>
+</section>
+
+</body>
+</html>

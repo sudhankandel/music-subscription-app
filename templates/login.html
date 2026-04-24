@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Music Subscription App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<section class="view page-center">
+  <div class="auth-box">
+    <h2>Login</h2>
+
+    <form method="POST" action="/login">
+      <label>Email</label>
+      <input type="email" name="email" required>
+
+      <label>Password</label>
+      <input type="password" name="password" required>
+
+      <button type="submit">Login</button>
+    </form>
+
+    <p class="message">{{ message }}</p>
+
+    <p class="hint">No account? <a href="/register">Register</a></p>
+  </div>
+</section>
+
+</body>
+</html>
