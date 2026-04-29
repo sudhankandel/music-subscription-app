@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for
+import boto3
 
 app = Flask(__name__)
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+table = dynamodb.Table('login')  
 
 @app.route("/")
 def home():
@@ -14,13 +17,25 @@ def login():
         email = request.form.get("email")
         password = request.form.get("password")
 
-        if email == "test@gmail.com" and password == "12345678":
-            return redirect(url_for("main"))
-        else:
-            message = "email or password is invalid"
+        try:
+            # 🔹 Get user from DynamoDB
+            response = table.get_item(Key={'email': email})
+
+            if 'Item' in response:
+                user = response['Item']
+
+                # 🔹 Check password
+                if user['password'] == password:
+                    return redirect(url_for("main", user_name=user['user_name']))
+                else:
+                    message = "Invalid password"
+            else:
+                message = "User not found"
+
+        except Exception as e:
+            message = f"Error: {str(e)}"
 
     return render_template("login.html", message=message)
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     message = ""
