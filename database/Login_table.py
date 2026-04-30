@@ -7,7 +7,7 @@ table = dynamodb.create_table(
     KeySchema=[
         {
             'AttributeName': 'email',
-            'KeyType': 'HASH'  
+            'KeyType': 'HASH'
         }
     ],
     AttributeDefinitions=[
@@ -16,7 +16,10 @@ table = dynamodb.create_table(
             'AttributeType': 'S'
         }
     ],
-    BillingMode='PAY_PER_REQUEST'
+    ProvisionedThroughput={
+        'ReadCapacityUnits': 1,
+        'WriteCapacityUnits': 1
+    }
 )
 
 print("Table creating...")

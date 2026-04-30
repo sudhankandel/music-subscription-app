@@ -41,7 +41,28 @@ def register():
     message = ""
 
     if request.method == "POST":
-        message = "Register button clicked"
+        email = request.form.get("email")
+        user_name = request.form.get("user_name")
+        password = request.form.get("password")
+
+        try:
+            response = table.get_item(Key={"email": email})
+
+            if "Item" in response:
+                message = "User already exists"
+            else:
+                table.put_item(
+                    Item={
+                        "email": email,
+                        "user_name": user_name,
+                        "password": password
+                    }
+                )
+
+                return redirect(url_for("login"))
+
+        except Exception as e:
+            message = f"Error: {str(e)}"
 
     return render_template("register.html", message=message)
 
