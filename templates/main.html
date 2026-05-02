@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Main Page</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<section id="mainView" class="dashboard">
+  <!-- Top Navigation -->
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Music Subscription Portal</p>
+      <h2>Main Dashboard</h2>
+    </div>
+
+    <div class="topbar-right">
+      <div class="user-pill">
+        <span class="avatar">{{ user_name[0]|upper if user_name else 'U' }}</span>
+        <div>
+          <span class="small">Welcome back</span>
+          <strong>{{ user_name }}</strong>
+        </div>
+      </div>
+      <a class="logout-btn" href="{{ url_for('logout') }}">Logout</a>
+    </div>
+  </header>
+
+  <main class="main-grid">
+    <!-- User Area -->
+    <section class="area profile-card">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">Account</p>
+          <h3>User Area</h3>
+        </div>
+      </div>
+
+      <div class="profile-box">
+        <div class="big-avatar">{{ user_name[0]|upper if user_name else 'U' }}</div>
+        <p class="small">Logged in user</p>
+        <h2 id="userNameText">{{ user_name }}</h2>
+      </div>
+
+      <div class="info-card">
+        <p class="small">You can search songs, view matching music results, and subscribe to your favourite artists from this page.</p>
+      </div>
+    </section>
+
+    <!-- Subscription Area -->
+    <section class="area">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">Saved Music</p>
+          <h3>Subscription Area</h3>
+        </div>
+      </div>
+
+      <div class="cards-list">
+        {% if subscriptions %}
+          {% for song in subscriptions %}
+            <article class="song-card">
+              <img class="artist-img" src="{{ song.img_url }}" alt="{{ song.artist }} image">
+              <div class="song-content">
+                <h4>{{ song.title }}</h4>
+                <p>{{ song.artist }}</p>
+
+                <div class="song-meta">
+                  <span>{{ song.year }}</span>
+                  <span>{{ song.album }}</span>
+                </div>
+
+                <form action="{{ url_for('remove') }}" method="POST">
+                  <input type="hidden" name="title" value="{{ song.title }}">
+                  <button class="danger" type="submit">Remove</button>
+                </form>
+              </div>
+            </article>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">
+            <div class="empty-icon">♪</div>
+            <h4>No subscriptions yet</h4>
+            <p class="small">Search for songs and click Subscribe to add them here.</p>
+          </div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- Query Area -->
+    <section class="area query-area">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">Search Library</p>
+          <h3>Query Area</h3>
+        </div>
+      </div>
+
+      <form class="query-form" action="{{ url_for('query') }}" method="POST">
+        <div class="query-fields">
+          <div>
+            <label>Title</label>
+            <input type="text" name="title" placeholder="Song title">
+          </div>
+
+          <div>
+            <label>Year</label>
+            <input type="number" name="year" placeholder="Year">
+          </div>
+
+          <div>
+            <label>Artist</label>
+            <input type="text" name="artist" placeholder="Artist">
+          </div>
+
+          <div>
+            <label>Album</label>
+            <input type="text" name="album" placeholder="Album">
+          </div>
+        </div>
+
+        <button type="submit">Query Music</button>
+      </form>
+
+      {% if message %}
+        <p class="message">{{ message }}</p>
+      {% endif %}
+
+      {% if results %}
+        <div class="results-heading">
+          <h3>Query Results</h3>
+          <span>{{ results|length }} found</span>
+        </div>
+
+        <div class="cards-list results-list">
+          {% for song in results %}
+            <article class="song-card">
+              <img class="artist-img" src="{{ song.image_url if song.image_url else song.img_url }}" alt="{{ song.artist }} image">
+              <div class="song-content">
+                <h4>{{ song.title }}</h4>
+                <p>{{ song.artist }}</p>
+
+                <div class="song-meta">
+                  <span>{{ song.year }}</span>
+                  <span>{{ song.album }}</span>
+                </div>
+
+                <form action="{{ url_for('subscribe') }}" method="POST">
+                  <input type="hidden" name="title" value="{{ song.title }}">
+                  <input type="hidden" name="artist" value="{{ song.artist }}">
+                  <input type="hidden" name="year" value="{{ song.year }}">
+                  <input type="hidden" name="album" value="{{ song.album }}">
+                  <input type="hidden" name="image_url" value="{{ song.image_url if song.image_url else song.img_url }}">
+
+                  <button type="submit">Subscribe</button>
+                </form>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </section>
+  </main>
+</section>
+
+</body>
+</html>
