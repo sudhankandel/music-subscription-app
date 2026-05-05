@@ -168,7 +168,7 @@ def api_subscribe():
                 "artist": data.get("artist"),
                 "year": data.get("year"),
                 "album": data.get("album"),
-                "img_url": data.get("image_url")
+                "img_url": data.get("img_url")
             }
         )
 
