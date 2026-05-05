@@ -102,8 +102,7 @@ async function loadUser() {
 document.getElementById("queryForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const form = e.target;
-  const params = new URLSearchParams(new FormData(form));
+  const params = new URLSearchParams(new FormData(e.target));
 
   const res = await fetch("/api/music?" + params.toString());
   const data = await res.json();
@@ -121,14 +120,16 @@ document.getElementById("queryForm").addEventListener("submit", async (e) => {
   msg.innerText = "";
 
   data.results.forEach(song => {
+    const songData = encodeURIComponent(JSON.stringify(song));
+
     resultsDiv.innerHTML += `
       <div class="song-card">
-        <img class="artist-img" src="${song.image_url || song.img_url}">
+        <img class="artist-img" src="${song.image_url}" alt="${song.artist}">
         <div>
           <h4>${song.title}</h4>
           <p>${song.artist}</p>
           <small>${song.year} • ${song.album}</small><br>
-          <button onclick='subscribe(${JSON.stringify(song)})'>Subscribe</button>
+          <button onclick="subscribe('${songData}')">Subscribe</button>
         </div>
       </div>
     `;
@@ -136,11 +137,19 @@ document.getElementById("queryForm").addEventListener("submit", async (e) => {
 });
 
 /* ================= SUBSCRIBE ================= */
-async function subscribe(song) {
+async function subscribe(songData) {
+  const song = JSON.parse(decodeURIComponent(songData));
+
   await fetch("/api/subscriptions", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(song)
+    body: JSON.stringify({
+      title: song.title,
+      artist: song.artist,
+      year: song.year,
+      album: song.album,
+      image_key: song.image_key
+    })
   });
 
   loadSubscriptions();
@@ -154,15 +163,20 @@ async function loadSubscriptions() {
   const div = document.getElementById("subscriptions");
   div.innerHTML = "";
 
+  if (!data.success || data.subscriptions.length === 0) {
+    div.innerHTML = `<p class="small">No subscriptions yet.</p>`;
+    return;
+  }
+
   data.subscriptions.forEach(song => {
     div.innerHTML += `
       <div class="song-card">
-        <img class="artist-img" src="${song.img_url}">
+        <img class="artist-img" src="${song.image_url}" alt="${song.artist}">
         <div>
           <h4>${song.title}</h4>
           <p>${song.artist}</p>
           <small>${song.year} • ${song.album}</small><br>
-          <button class="danger" onclick="removeSub('${song.title}')">Remove</button>
+          <button class="danger" onclick="removeSub('${encodeURIComponent(song.title)}')">Remove</button>
         </div>
       </div>
     `;
@@ -171,7 +185,10 @@ async function loadSubscriptions() {
 
 /* ================= REMOVE ================= */
 async function removeSub(title) {
-  await fetch("/api/subscriptions/" + title, { method: "DELETE" });
+  await fetch("/api/subscriptions/" + title, {
+    method: "DELETE"
+  });
+
   loadSubscriptions();
 }
 

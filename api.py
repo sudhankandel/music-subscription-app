@@ -1,10 +1,32 @@
 from flask import Blueprint, request, jsonify, session
 from boto3.dynamodb.conditions import Attr
-from aws_config import login_table, music_table, subscription_table
+from aws_config import (
+    login_table,
+    music_table,
+    subscription_table,
+    s3_client,
+    S3_BUCKET_NAME
+)
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 
+# ===================== HELPER =====================
+def generate_image_url(image_key):
+    if not image_key:
+        return None
+
+    return s3_client.generate_presigned_url(
+        "get_object",
+        Params={
+            "Bucket": S3_BUCKET_NAME,
+            "Key": image_key
+        },
+        ExpiresIn=3600
+    )
+
+
+# ===================== LOGIN =====================
 @api_bp.route("/login", methods=["POST"])
 def api_login():
     data = request.get_json()
@@ -36,6 +58,7 @@ def api_login():
         return jsonify({"success": False, "message": str(e)}), 500
 
 
+# ===================== REGISTER =====================
 @api_bp.route("/register", methods=["POST"])
 def api_register():
     data = request.get_json()
@@ -67,6 +90,7 @@ def api_register():
         return jsonify({"success": False, "message": str(e)}), 500
 
 
+# ===================== CURRENT USER =====================
 @api_bp.route("/me", methods=["GET"])
 def api_me():
     if "email" not in session:
@@ -79,6 +103,7 @@ def api_me():
     })
 
 
+# ===================== MUSIC QUERY =====================
 @api_bp.route("/music", methods=["GET"])
 def api_music():
     if "email" not in session:
@@ -117,6 +142,10 @@ def api_music():
         response = music_table.scan(FilterExpression=filter_expression)
         results = response.get("Items", [])
 
+    
+        for song in results:
+            song["image_url"] = generate_image_url(song.get("image_key"))
+
         if not results:
             return jsonify({
                 "success": False,
@@ -134,6 +163,7 @@ def api_music():
         return jsonify({"success": False, "message": str(e)}), 500
 
 
+# ===================== GET SUBSCRIPTIONS =====================
 @api_bp.route("/subscriptions", methods=["GET"])
 def api_get_subscriptions():
     if "email" not in session:
@@ -144,15 +174,21 @@ def api_get_subscriptions():
             FilterExpression=Attr("email").eq(session["email"])
         )
 
+        subscriptions = response.get("Items", [])
+
+        for song in subscriptions:
+            song["image_url"] = generate_image_url(song.get("image_key"))
+
         return jsonify({
             "success": True,
-            "subscriptions": response.get("Items", [])
+            "subscriptions": subscriptions
         })
 
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
 
+# ===================== SUBSCRIBE =====================
 @api_bp.route("/subscriptions", methods=["POST"])
 def api_subscribe():
     if "email" not in session:
@@ -168,7 +204,7 @@ def api_subscribe():
                 "artist": data.get("artist"),
                 "year": data.get("year"),
                 "album": data.get("album"),
-                "img_url": data.get("image_url")
+                "image_key": data.get("image_key") 
             }
         )
 
@@ -181,6 +217,7 @@ def api_subscribe():
         return jsonify({"success": False, "message": str(e)}), 500
 
 
+# ===================== REMOVE SUBSCRIPTION =====================
 @api_bp.route("/subscriptions/<title>", methods=["DELETE"])
 def api_remove_subscription(title):
     if "email" not in session:
@@ -203,6 +240,7 @@ def api_remove_subscription(title):
         return jsonify({"success": False, "message": str(e)}), 500
 
 
+# ===================== LOGOUT =====================
 @api_bp.route("/logout", methods=["POST"])
 def api_logout():
     session.clear()
